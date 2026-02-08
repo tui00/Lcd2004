@@ -13,9 +13,12 @@ Avalible #define-s:
 * LCD_D_DISABLE_4_LINES_SUPPORT
 * LCD_D_DISABLE_SET_POSITION_FUNCTION
 * LCD_D_DISABLE_PRE_INIT_DELAY
+* LCD_D_DISABLE_POST_INIT_DELAY
 * LCD_D_DISABLE_PIN_MODE
 * LCD_D_DISABLE_FONT_SELECTION
-* LCD_D_REMOVE_COLS_AND_ROWS
+* LCD_D_REMOVE_COLS_AND_ROWS_VARS
+* LCD_D_REMOVE_CUR_X_AND_Y_VARS
+* LCD_D_USE_BUFFER
 * LCD_D_FULL_ACCESS
 * LCD_D_ONLY_INIT_AND_WRITE_FUNCTIONS
 
@@ -38,8 +41,11 @@ Avalible #define-s:
 #define LCD_D_DISABLE_4_LINES_SUPPORT
 #define LCD_D_DISABLE_SET_POSITION_FUNCTION
 #define LCD_D_DISABLE_PRE_INIT_DELAY
+#define LCD_D_DISABLE_POST_INIT_DELAY
 #define LCD_D_DISABLE_FONT_SELECTION
-#define LCD_D_REMOVE_COLS_AND_ROWS
+#define LCD_D_REMOVE_COLS_AND_ROWS_VARS
+#define LCD_D_REMOVE_CUR_X_AND_Y_VARS
+#undef LCD_D_USE_BUFFER
 #endif // LCD_D_ONLY_INIT_AND_WRITE_FUNCTIONS
 
 #ifdef LCD_D_DISABLE_SET_POSITION_FUNCTION
@@ -48,10 +54,19 @@ Avalible #define-s:
 #define LCD_D_DISABLE_CUSTOM_CHARACTERS
 #endif // LCD_D_DISABLE_SET_POSITION_FUNCTION
 
-#ifdef LCD_D_REMOVE_COLS_AND_ROWS
+#ifdef LCD_D_REMOVE_COLS_AND_ROWS_VARS
 #define LCD_D_DISABLE_AUTO_LINE_BREAK
 #define LCD_D_DISABLE_4_LINES_SUPPORT
-#endif // LCD_D_REMOVE_COLS_AND_ROWS
+#elif defined(LCD_D_DISABLE_AUTO_LINE_BREAK) && defined(LCD_D_DISABLE_4_LINES_SUPPORT)
+#define LCD_D_REMOVE_COLS_AND_ROWS_VARS
+#endif // LCD_D_REMOVE_COLS_AND_ROWS_VARS
+
+#ifdef LCD_D_REMOVE_CUR_X_AND_Y_VARS
+#define LCD_D_DISABLE_AUTO_LINE_BREAK
+#undef LCD_D_USE_BUFFER
+#elif defined(LCD_D_DISABLE_AUTO_LINE_BREAK) && !defined(LCD_D_USE_BUFFER)
+#define LCD_D_REMOVE_CUR_X_AND_Y_VARS
+#endif // LCD_D_REMOVE_CUR_X_AND_Y_VARS
 
 #ifdef LCD_D_DISABLE_AUTO_LINE_BREAK
 #define LCD_D_DISABLE_SPECIAL_CHARACTERS
@@ -91,13 +106,18 @@ public:
   bool display_en = true, cursor_en = false, cursor_blink = false;
 #endif // LCD_D_DISABLE_DISPLAY_AND_CURSOR_CONTROL
 
-#ifndef LCD_D_REMOVE_COLS_AND_ROWS
+#ifndef LCD_D_REMOVE_COLS_AND_ROWS_VARS
   uint8_t cols, rows; // Resolution.
-#endif                // LCD_D_REMOVE_COLS_AND_ROWS
+#endif                // LCD_D_REMOVE_COLS_AND_ROWS_VARS
 
-#ifndef LCD_D_DISABLE_AUTO_LINE_BREAK
-  uint8_t cur_x, cur_y; // Position.
-#endif                  // LCD_D_DISABLE_AUTO_LINE_BREAK
+#ifndef LCD_D_REMOVE_CUR_X_AND_Y_VARS
+  uint8_t cur_x = 0, cur_y = 0; // Position.
+#endif                          // LCD_D_REMOVE_CUR_X_AND_Y_VARS
+
+#ifdef LCD_D_USE_BUFFER
+  uint8_t position = 0; // Buffer position.
+  uint8_t buffer[0x4F]; // Buffer.
+#endif                  // LCD_D_USE_BUFFER
 
   void sendByte(uint8_t byte, bool is_data = false)
   {
@@ -148,9 +168,9 @@ public:
 
 public:
   void init(
-#ifdef LCD_D_REMOVE_COLS_AND_ROWS
+#ifdef LCD_D_REMOVE_COLS_AND_ROWS_VARS
       uint8_t rows,
-#endif // LCD_D_REMOVE_COLS_AND_ROWS
+#endif // LCD_D_REMOVE_COLS_AND_ROWS_VARS
 #ifndef LCD_D_DISABLE_FONT_SELECTION
       uint8_t font = LCD_FONT_5X8,
 #endif // LCD_D_DISABLE_FONT_SELECTION
@@ -195,32 +215,50 @@ public:
     sendByte(LCD_CMD_DISPLAY_CONTROL | 4);
 #endif // LCD_D_DISABLE_DISPLAY_AND_CURSOR_CONTROL
 
-#ifndef LCD_D_DISABLE_CLEAR_FUNCTION
-    clear();
-  }
-
-  void clear()
-  {
-#endif // LCD_D_DISABLE_CLEAR_FUNCTION
+#ifdef LCD_D_USE_BUFFER
+    for (int i = 0; i < 0x4F; i++)
+      buffer[i] = ' ';
+#endif // LCD_D_USE_BUFFER
 
     sendByte(LCD_CMD_CLEAR_DISPLAY); // Clear display.
+    sendByte(LCD_CMD_RETURN_HOME);   // Return home.
+#ifndef LCD_D_DISABLE_POST_INIT_DELAY
+    delayMicroseconds(1483);
+#endif // LCD_D_DISABLE_POST_INIT_DELAY
+  }
+
+#ifndef LCD_D_DISABLE_CLEAR_FUNCTION
+  void clear()
+  {
+#ifdef LCD_D_USE_BUFFER
+    for (int i = 0; i < 0x4F; i++)
+      buffer[i] = ' ';
+#else
+    sendByte(LCD_CMD_CLEAR_DISPLAY); // Clear display.
+#endif // LCD_D_USE_BUFFER
 
 #ifndef LCD_D_DISABLE_RETURN_HOME_FUNCTION
     returnHome(); // Very short init.
+#endif            // LCD_D_DISABLE_RETURN_HOME_FUNCTION
   }
+#endif // LCD_D_DISABLE_CLEAR_FUNCTION
 
+#ifndef LCD_D_DISABLE_RETURN_HOME_FUNCTION
   void returnHome()
   {
-#endif // LCD_D_DISABLE_RETURN_HOME_FUNCTION
-
     sendByte(LCD_CMD_RETURN_HOME); // Return home.
     delayMicroseconds(1483);
 
-#ifndef LCD_D_DISABLE_AUTO_LINE_BREAK
+#ifndef LCD_D_REMOVE_CUR_X_AND_Y_VARS
     cur_x = 0;
     cur_y = 0;
-#endif // LCD_D_DISABLE_AUTO_LINE_BREAK
+#endif // LCD_D_REMOVE_CUR_X_AND_Y_VARS
+
+#ifdef LCD_D_USE_BUFFER
+    position = 0;
+#endif // LCD_D_USE_BUFFER
   }
+#endif // LCD_D_DISABLE_RETURN_HOME_FUNCTION
 
 #ifndef LCD_D_DISABLE_DISPLAY_AND_CURSOR_CONTROL
   void setOn(bool on)
@@ -239,21 +277,27 @@ public:
 #ifndef LCD_D_DISABLE_SET_POSITION_FUNCTION
   void setPosition(uint8_t x, uint8_t y)
   {
-#ifndef LCD_D_REMOVE_COLS_AND_ROWS
+#ifndef LCD_D_REMOVE_COLS_AND_ROWS_VARS
     x %= cols;
     y %= rows;
-#endif // LCD_D_REMOVE_COLS_AND_ROWS
+#endif // LCD_D_REMOVE_COLS_AND_ROWS_VARS
 
 #ifndef LCD_D_DISABLE_4_LINES_SUPPORT
-    sendByte(LCD_CMD_SET_DDRAM_ADDRESS | (((y % 2) * 0x40) + (cols * (y >= 2)) + x)); // Set DDRAM address.
+    uint8_t addr = ((y % 2) * 0x40) + (cols * (y >= 2)) + x;
 #else
-    sendByte(LCD_CMD_SET_DDRAM_ADDRESS | (y * 0x40)); // Set DDRAM address.
+    uint8_t addr = (y % 2) * 0x40 + x;
 #endif // LCD_D_DISABLE_4_LINES_SUPPORT
 
-#ifndef LCD_D_DISABLE_AUTO_LINE_BREAK
+    sendByte(LCD_CMD_SET_DDRAM_ADDRESS | addr); // Set DDRAM address.
+
+#ifndef LCD_D_REMOVE_CUR_X_AND_Y_VARS
     cur_x = x;
     cur_y = y;
-#endif // LCD_D_DISABLE_AUTO_LINE_BREAK
+#endif // LCD_D_REMOVE_CUR_X_AND_Y_VARS
+
+#ifdef LCD_D_USE_BUFFER
+    position = addr;
+#endif // LCD_D_USE_BUFFER
   }
 #endif // LCD_D_DISABLE_SET_POSITION_FUNCTION
 
@@ -264,11 +308,11 @@ public:
     for (uint8_t i = 0; i < 8; i++)
       sendByte(symbol[i], true);
 
-#ifndef LCD_D_DISABLE_AUTO_LINE_BREAK
+#ifndef LCD_D_REMOVE_CUR_X_AND_Y_VARS
     setPosition(cur_x, cur_y); // Set write to DDRAM.
 #else
     setPosition(0, 0);
-#endif // LCD_D_DISABLE_AUTO_LINE_BREAK
+#endif // LCD_D_REMOVE_CUR_X_AND_Y_VARS
   }
 #endif // LCD_D_DISABLE_CUSTOM_CHARACTERS
 
@@ -303,8 +347,12 @@ public:
 #endif // LCD_D_DISABLE_SPECIAL_CHARACTERS
 
     {
+#ifdef LCD_D_USE_BUFFER
+      buffer[position++] = byte;
+#else
       sendByte(byte, true);
       delayMicroseconds(4);
+#endif // LCD_D_USE_BUFFER
 
 #ifndef LCD_D_DISABLE_AUTO_LINE_BREAK
       if (++cur_x == cols)
@@ -315,11 +363,31 @@ public:
     return 1;
   }
 
-#ifndef LCD_D_REMOVE_COLS_AND_ROWS
+#ifdef LCD_D_USE_BUFFER
+  virtual int availableForWrite()
+  {
+    return 0x4F - position;
+  }
+
+  virtual void flush()
+  {
+    sendByte(LCD_CMD_CLEAR_DISPLAY); // Clear display.
+    sendByte(LCD_CMD_RETURN_HOME);   // Return home.
+    delayMicroseconds(1483);
+
+    for (int i = 0; i < 0x4F; i++)
+    {
+      sendByte(buffer[i], true);
+      delayMicroseconds(40);
+    }
+  }
+#endif // LCD_D_USE_BUFFER
+
+#ifndef LCD_D_REMOVE_COLS_AND_ROWS_VARS
   Lcd2004(uint8_t RS, uint8_t E, uint8_t D0, uint8_t D1, uint8_t D2, uint8_t D3, uint8_t D4, uint8_t D5, uint8_t D6, uint8_t D7, uint8_t cols, uint8_t rows)
 #else
   Lcd2004(uint8_t RS, uint8_t E, uint8_t D0, uint8_t D1, uint8_t D2, uint8_t D3, uint8_t D4, uint8_t D5, uint8_t D6, uint8_t D7)
-#endif // LCD_D_REMOVE_COLS_AND_ROWS
+#endif // LCD_D_REMOVE_COLS_AND_ROWS_VARS
   {
 #ifndef LCD_D_DISABLE_PIN_MODE
     pinMode(RS, OUTPUT);
@@ -347,18 +415,18 @@ public:
     this->D6 = D6;
     this->D7 = D7;
 
-#ifndef LCD_D_REMOVE_COLS_AND_ROWS
+#ifndef LCD_D_REMOVE_COLS_AND_ROWS_VARS
     this->cols = cols;
     this->rows = rows;
-#endif // LCD_D_REMOVE_COLS_AND_ROWS
+#endif // LCD_D_REMOVE_COLS_AND_ROWS_VARS
   }
 
 #ifndef LCD_D_DISABLE_4_BIT_MODE
-#ifndef LCD_D_REMOVE_COLS_AND_ROWS
+#ifndef LCD_D_REMOVE_COLS_AND_ROWS_VARS
   Lcd2004(uint8_t RS, uint8_t E, uint8_t D4, uint8_t D5, uint8_t D6, uint8_t D7, uint8_t cols, uint8_t rows) : Lcd2004(RS, E, D4, D5, D6, D7, D4, D5, D6, D7, cols, rows)
 #else
   Lcd2004(uint8_t RS, uint8_t E, uint8_t D4, uint8_t D5, uint8_t D6, uint8_t D7) : Lcd2004(RS, E, D4, D5, D6, D7, D4, D5, D6, D7)
-#endif // LCD_D_REMOVE_COLS_AND_ROWS
+#endif // LCD_D_REMOVE_COLS_AND_ROWS_VARS
   {
     four_bit_mode = true;
   }
