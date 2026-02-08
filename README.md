@@ -4,27 +4,27 @@
 [![GitHub Downloads (all assets, latest release)](https://img.shields.io/github/downloads/tui00/Lcd2004/latest/total)](https://github.com/tui00/Lcd2004/releases/latest)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/tui00/Lcd2004)
 
-Чистая, легкая библиотека для жидко-кристалических дисплеев, которую легко настроить
+A clean, lightweight library for liquid crystal displays that is easy to set up
 
-## Использование
-Посмотрите примеры
+## Usage
+Take a look at the examples
 
-## Установка
-Библиотека доступна в PlatformIO по имени tui00/Lcd2004
+## Installation
+The library is available in PlatformIO named tui00/Lcd2004
 
-Если нужно установить в Arduino IDE нажмите Sketch → Include Library → Add .ZIP Library и выбирете zip с библиотекой
+If you want to install it in the Arduino IDE, click Sketch → Include Library → Add .ZIP Library and select the zip with the library
 
 ## Feedback
-Если нашли баг, создайте [Issue](https://github.com/tui00/Lcd2004/issues). Если хотите получить ответ на проблему быстрее напишите мне в [telegram](https://t.me/tui00abc)
+If you find a bug, create an [Issue](https://github.com/tui00/Lcd2004/issues). If you want to get an answer to the problem faster, write to me in [Telegram](https://t.me/tui00abc)
 
-Если пишите в telegram, лучше просто отправить ссылку на [Telegraph](https://telegra.ph/)
+If you write to Telegram, it's better to just send a link to [Telegraph](https://telegra.ph)
 
-### Обязательно указать:
-* Если пишите на почту, telegram: Имя библиотеки (Lcd2004)
-* Версию библиотеки
-* МК на котором происходит баг
-* Если есть: Версия SDK для разработки
-* Как получить баг?
-* Тип дисплея. Примеры: 16x2, 20x4, 6x1
-* Баг есть в примерах?
-* Как к вам обращяться?
+### Be sure to specify:
+* If you write by email, Telegram: Library name (Lcd2004)
+* Library version
+* The MC where the bug occurs
+* If available: SDK version for development
+* How do I get the bug?
+* Display type. Examples: 16x2, 20x4, 6x1
+* Is there a bug in the examples?
+* How should I address you?

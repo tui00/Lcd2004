@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#define LCD_D_USE_BUFFER // Включаем буффер
+#define LCD_D_USE_BUFFER // Enabling the buffer
 #include <lcd2004.h>
 
 // RS, E, D0, D1, D2, D3, D4, D5, D6, D7, Width, Height
