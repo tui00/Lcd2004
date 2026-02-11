@@ -13,7 +13,6 @@ Avalible #define-s:
 * LCD_D_DISABLE_4_LINES_SUPPORT
 * LCD_D_DISABLE_SET_POSITION_FUNCTION
 * LCD_D_DISABLE_PRE_INIT_DELAY
-* LCD_D_DISABLE_POST_INIT_DELAY
 * LCD_D_DISABLE_PIN_MODE
 * LCD_D_DISABLE_FONT_SELECTION
 * LCD_D_REMOVE_COLS_AND_ROWS_VARS
@@ -41,7 +40,6 @@ Avalible #define-s:
 #define LCD_D_DISABLE_4_LINES_SUPPORT
 #define LCD_D_DISABLE_SET_POSITION_FUNCTION
 #define LCD_D_DISABLE_PRE_INIT_DELAY
-#define LCD_D_DISABLE_POST_INIT_DELAY
 #define LCD_D_DISABLE_FONT_SELECTION
 #define LCD_D_REMOVE_COLS_AND_ROWS_VARS
 #define LCD_D_REMOVE_CUR_X_AND_Y_VARS
@@ -71,6 +69,16 @@ Avalible #define-s:
 #ifdef LCD_D_DISABLE_AUTO_LINE_BREAK
 #define LCD_D_DISABLE_SPECIAL_CHARACTERS
 #endif // LCD_D_DISABLE_AUTO_LINE_BREAK
+
+#ifdef LCD_D_DISABLE_PRINT
+#undef LCD_D_USE_BUFFER
+#endif // LCD_D_DISABLE_PRINT
+
+#ifdef LCD_D_USE_BUFFER
+#ifndef LCD_S_BUFFER_SIZE
+#define LCD_S_BUFFER_SIZE 0x50
+#endif // LCD_S_BUFFER_SIZE
+#endif // LCD_D_USE_BUFFER
 
 #define LCD_CMD_CLEAR_DISPLAY 0x1
 #define LCD_CMD_RETURN_HOME 0x2
@@ -215,23 +223,17 @@ public:
     sendByte(LCD_CMD_DISPLAY_CONTROL | 4);
 #endif // LCD_D_DISABLE_DISPLAY_AND_CURSOR_CONTROL
 
+    clear();
 #ifdef LCD_D_USE_BUFFER
-    for (int i = 0; i < 0x4F; i++)
-      buffer[i] = ' ';
+    flush();
 #endif // LCD_D_USE_BUFFER
-
-    sendByte(LCD_CMD_CLEAR_DISPLAY); // Clear display.
-    sendByte(LCD_CMD_RETURN_HOME);   // Return home.
-#ifndef LCD_D_DISABLE_POST_INIT_DELAY
-    delayMicroseconds(1483);
-#endif // LCD_D_DISABLE_POST_INIT_DELAY
   }
 
 #ifndef LCD_D_DISABLE_CLEAR_FUNCTION
   void clear()
   {
 #ifdef LCD_D_USE_BUFFER
-    for (int i = 0; i < 0x4F; i++)
+    for (int i = 0; i < LCD_S_BUFFER_SIZE; i++)
       buffer[i] = ' ';
 #else
     sendByte(LCD_CMD_CLEAR_DISPLAY); // Clear display.
@@ -366,16 +368,15 @@ public:
 #ifdef LCD_D_USE_BUFFER
   virtual int availableForWrite()
   {
-    return 0x4F - position;
+    return LCD_S_BUFFER_SIZE - position;
   }
 
   virtual void flush()
   {
-    sendByte(LCD_CMD_CLEAR_DISPLAY); // Clear display.
-    sendByte(LCD_CMD_RETURN_HOME);   // Return home.
+    sendByte(LCD_CMD_RETURN_HOME); // Return home.
     delayMicroseconds(1483);
 
-    for (int i = 0; i < 0x4F; i++)
+    for (int i = 0; i < LCD_S_BUFFER_SIZE; i++)
     {
       sendByte(buffer[i], true);
       delayMicroseconds(40);
