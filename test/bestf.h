@@ -1,8 +1,4 @@
-// +-------------------------------------------+
-// | BESTF: Best Framework for Arduino testing |
-// +-------------------------------------------+
-
-// This file is auto-generated, do not change it if you do not know what you are doing!
+// BESTF (Arduino part)
 
 #pragma once
 #define _FM_EXP(x) x
@@ -531,11 +527,6 @@
 #define _FM_FOR_(N, f, p, ...) _FM_EXP(_FM_CONCAT(_FM_FOR_, N)(f, N, p, __VA_ARGS__))
 #define FOR_MACRO(f, p, ...) _FM_FOR_(_FM_FOR_NARG(__VA_ARGS__), f, p, __VA_ARGS__)
 
-// BESTF (Arduino part)
-
-#pragma once
-
-
 #include <Arduino.h>
 
 #define _INTERNAL_STR_(x) #x
@@ -555,19 +546,43 @@
             return;                                                                      \
         }                                                                                \
     } while (0)
-#define END()                                        \
+#define END                                          \
     do                                               \
     {                                                \
         Serial.println("T" _INTERNAL_STR(__LINE__)); \
+        return;                                      \
     } while (0)
-#define ABORT()                                            \
+#define ABORT                                              \
     do                                                     \
     {                                                      \
         Serial.println("FAbort;" _INTERNAL_STR(__LINE__)); \
         return;                                            \
     } while (0)
 
-#define PRINT(...) Serial.println("D" __VA_ARGS__, ";" _INTERNAL_STR(__LINE__))
+#define SKIP                                           \
+    do                                                 \
+    {                                                  \
+        Serial.println("DS;" _INTERNAL_STR(__LINE__)); \
+        return;                                        \
+    } while (0)
+#define CONFIRM                                        \
+    do                                                 \
+    {                                                  \
+        Serial.println("DC;" _INTERNAL_STR(__LINE__)); \
+        while (true)                                   \
+        {                                              \
+            if (Serial.available())                    \
+            {                                          \
+                char c = Serial.read();                \
+                if (c == 'n')                          \
+                    SKIP;                              \
+                else if (c == 'y')                     \
+                    break;                             \
+            }                                          \
+            delay(100);                                \
+        }                                              \
+    } while (0)
+#define PRINT(str) Serial.println("DT;" str ";" _INTERNAL_STR(__LINE__))
 
 #define START void _internal_start(void)
 #define NO_START \
@@ -580,10 +595,10 @@
 #define TESTS_LIST(...)                                                  \
     void setup(void)                                                     \
     {                                                                    \
-        Serial.begin(115200);                                              \
+        Serial.begin(115200);                                            \
         while (!Serial)                                                  \
             ;                                                            \
-        Serial.println("\e[1;36m"                                        \
+        Serial.println("\e[1;3;36m"                                      \
                                                                          \
                        "+-------------------------------------------+\n" \
                        "| BESTF: Best Framework for Arduino testing |\n" \
@@ -597,4 +612,3 @@
         Serial.println("E");                                             \
     }                                                                    \
     void loop() {}
-
