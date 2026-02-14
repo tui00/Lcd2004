@@ -45,6 +45,9 @@ int counter = 0;
 
 void loop()
 {
+    // Reset
+    lcd.reset();
+
     // Clearing, the position is set to 0, 0
     lcd.clear();
 
