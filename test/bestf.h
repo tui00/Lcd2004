@@ -51,7 +51,7 @@
             {                                          \
                 char c = Serial.read();                \
                 if (c == 'n')                          \
-                    end;                              \
+                    end;                               \
                 else if (c == 'y')                     \
                     break;                             \
             }                                          \
@@ -60,7 +60,13 @@
     } while (0)
 #define CONFIRM _INTERNAL_CONFIRM(ABORT)
 #define WEAK_CONFIRM _INTERNAL_CONFIRM(SKIP)
-#define PRINT(str) Serial.println("DT;" str ";" _INTERNAL_STR(__LINE__))
+#define PRINT(...)                                   \
+    do                                               \
+    {                                                \
+        Serial.print("DT;");                         \
+        Serial.printf(__VA_ARGS__);                  \
+        Serial.println(";" _INTERNAL_STR(__LINE__)); \
+    } while (0)
 
 #define START void _internal_start(void)
 #define NO_START \

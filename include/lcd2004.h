@@ -20,6 +20,7 @@ Avalible #define-s:
 * LCD_D_USE_BUFFER
 * LCD_D_FULL_ACCESS
 * LCD_D_ONLY_INIT_AND_WRITE_FUNCTIONS
+* LCD_D_DISABLE_RESET_FUNCTION
 
 */
 
@@ -44,6 +45,7 @@ Avalible #define-s:
 #define LCD_D_REMOVE_COLS_AND_ROWS_VARS
 #define LCD_D_REMOVE_CUR_X_AND_Y_VARS
 #undef LCD_D_USE_BUFFER
+#define LCD_D_DISABLE_RESET_FUNCTION
 #endif // LCD_D_ONLY_INIT_AND_WRITE_FUNCTIONS
 
 #ifdef LCD_D_DISABLE_SET_POSITION_FUNCTION
@@ -383,6 +385,21 @@ public:
     }
   }
 #endif // LCD_D_USE_BUFFER
+
+#ifndef LCD_D_DISABLE_RESET_FUNCTION
+  void reset()
+  {
+#ifndef LCD_D_DISABLE_CLEAR_FUNCTION
+    clear();
+#endif // LCD_D_DISABLE_CLEAR_FUNCTION
+#ifdef LCD_D_USE_BUFFER
+    flush();
+#endif // LCD_D_USE_BUFFER
+#ifndef LCD_D_DISABLE_SET_POSITION_FUNCTION
+    setPosition(0, 0);
+#endif // LCD_D_DISABLE_SET_POSITION_FUNCTION
+  }
+#endif // LCD_D_DISABLE_RESET_FUNCTION
 
 #ifndef LCD_D_REMOVE_COLS_AND_ROWS_VARS
   Lcd2004(uint8_t RS, uint8_t E, uint8_t D0, uint8_t D1, uint8_t D2, uint8_t D3, uint8_t D4, uint8_t D5, uint8_t D6, uint8_t D7, uint8_t cols, uint8_t rows)

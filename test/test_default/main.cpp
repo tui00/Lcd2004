@@ -98,7 +98,8 @@ TEST(saveCustomChar)
     TEST_END
 }
 
-TEST(write) {
+TEST(write)
+{
     TEST_START
 
     lcd.write('1');
@@ -108,4 +109,20 @@ TEST(write) {
     TEST_END
 }
 
-TESTS_LIST(write, clear, return_home, setOn, setCursor, setPosition, saveCustomChar)
+TEST(reset)
+{
+    TEST_START
+
+    for (int y = 0; y < 2; y++)
+        for (int x = 0; x < 16; x++)
+        {
+            lcd.write(x + y * 16);
+        }
+
+    WAIT(1);
+    lcd.reset();
+
+    TEST_END
+}
+
+TESTS_LIST(write, clear, return_home, setOn, setCursor, setPosition, saveCustomChar, reset)
